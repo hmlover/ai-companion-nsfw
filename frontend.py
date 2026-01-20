@@ -60,8 +60,7 @@ with tab1:
                 st.session_state.messages.append({"role": "assistant", "content": response.choices[0].message.content})
 
 with tab2:
-    prompt = st.text_input("Image prompt:", placeholder="🔥 hot anime girl in cyberpunk city")
-    if st.button("🔥 Generate NSFW Image", type="primary"):
+   if st.button("🔥 Generate NSFW Image", type="primary"):
     prompt = st.text_input("NSFW Prompt:", value="beautiful woman, detailed, realistic, 8k")
     
     try:
