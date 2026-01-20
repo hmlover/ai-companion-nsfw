@@ -5,9 +5,6 @@ from groq import Groq
 import replicate
 import stripe
 
-
-load_dotenv()
-
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 replicate_client = replicate.Client(api_token=os.getenv("REPLICATE_API_TOKEN"))
