@@ -51,7 +51,7 @@ with tab1:
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 response = client.chat.completions.create(
-                    model="llama-3.2-1b-instant",  # ✅ FIXED MODEL
+                    model="llama3-groq-8b-8192-tool-use-preview",  # ✅ FIXED MODEL
                     messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages],
                     temperature=0.7,  # ✅ FIXED TEMP
                     max_tokens=1024
