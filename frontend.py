@@ -38,6 +38,4 @@ if prompt := st.chat_input("Make me hard..."):
             except:
                 st.error("Backend down? Check Terminal 1!")
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8501))
-    st.run(host="0.0.0.0", port=port)
+
