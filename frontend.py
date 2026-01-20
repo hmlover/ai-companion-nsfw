@@ -60,20 +60,26 @@ with tab1:
                 st.session_state.messages.append({"role": "assistant", "content": response.choices[0].message.content})
 
 with tab2:
-   if st.button("🔥 Generate NSFW Image", type="primary"):
-    prompt = st.text_input("NSFW Prompt:", value="beautiful woman, detailed, realistic, 8k")
+    # PROMPT ALWAYS VISIBLE
+    prompt = st.text_input("🔥 NSFW Prompt:", 
+        value="hyper-realistic beautiful woman, perfect skin, 8k, detailed face")
     
-    try:
-        with st.spinner('Generating...'):
-            output = replicate_client.run(
-                "black-forest-labs/flux-schnell:d041a0dbcb6d899e9967d6d6c0fc6f0f",
-                input={
-                    "prompt": prompt,
-                    "num_outputs": 1,
-                    "num_inference_steps": 20
-                }
-            )
-        st.image(output[0])
-        st.success("✅ Generated!")
-    except Exception as e:
-        st.error(f"Error: {str(e)[:200]}")
+    # SEPARATE BUTTON
+    if st.button("🚀 Generate Pro Image", type="primary", use_container_width=True):
+        if prompt.strip():
+            try:
+                with st.spinner('🖼️ Generating Pro Image...'):
+                    output = replicate_client.run(
+                        "black-forest-labs/flux-schnell:d041a0dbcb6d899e9967d6d6c0fc6f0f",
+                        input={
+                            "prompt": prompt,
+                            "num_inference_steps": 4  # FASTER
+                        }
+                    )
+                st.image(output[0], use_column_width=True)
+                st.success("✅ Pro Image Generated!")
+            except Exception as e:
+                st.error(f"❌ {str(e)[:150]}")
+        else:
+            st.warning("👆 Enter a prompt first!")
+
