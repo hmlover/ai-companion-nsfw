@@ -62,22 +62,40 @@ with tab1:
 with tab2:
     st.markdown("### 🔥 NSFW Image Generator")
     prompt = st.text_input("NSFW Prompt:", 
-        value="beautiful woman, realistic, 8k, detailed")
+        value="beautiful woman, realistic, detailed face, 8k, cinematic")
     
-    if st.button("🚀 Generate Image", type="primary"):
-        try:
-            with st.spinner('Generating...'):
-                # ✅ 100% WORKING - Stability AI
-                output = replicate_client.run(
-                    "stability-ai/sdxl:39ed52f2d7a1a30b7a8a1d3c7231c207eccea890f797a3b212e27cd46e9d9c4d",
-                    input={
-                        "prompt": prompt,
-                        "num_outputs": 1,
-                        "num_inference_steps": 20
-                    }
-                )
-            st.image(output[0])
-            st.success("✅ Generated!")
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
+    col1, col2 = st.columns([3,1])
+    with col1:
+        model = st.selectbox("Model:", [
+            "qwen/qwen-image", 
+            "prunaai/z-image-turbo",
+            "prunaai/p-image"
+        ])
+    
+    with col2:
+        if st.button("🚀 Generate", type="primary"):
+            try:
+                with st.spinner('Generating...'):
+                    # ✅ TOP 3 WORKING MODELS FROM YOUR LIST
+                    if model == "qwen/qwen-image":
+                        output = replicate_client.run(
+                            "qwen/qwen-image:0bba9e70f78437359725e0989ead45ca8b09e6c12a070dfe9a09e6856b43a44d",
+                            input={"prompt": prompt}
+                        )
+                    elif model == "prunaai/z-image-turbo":
+                        output = replicate_client.run(
+                            "prunaai/z-image-turbo:5b14821e65b15d583118283f5d5634adf38ac1c24b6e0749a6a41f83fbc2b8ce",
+                            input={"prompt": prompt}
+                        )
+                    else:  # p-image
+                        output = replicate_client.run(
+                            "prunaai/p-image:a29254bca655ab1c8f39ba4a7adcd025faa2d60bbeb5d36cb05a252d1e0cfcfd",
+                            input={"prompt": prompt}
+                        )
+                    
+                st.image(output[0] if isinstance(output, list) else output)
+                st.success("✅ Generated!")
+            except Exception as e:
+                st.error(f"❌ Error: {str(e)}")
+                st.info("💡 Try different model")
 
