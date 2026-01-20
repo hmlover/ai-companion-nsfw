@@ -1,94 +1,73 @@
+# frontend.py - FINAL WORKING VERSION
 import streamlit as st
 import os
-import requests
-import json
 from groq import Groq
 import replicate
 import stripe
+from dotenv import load_dotenv
 
-# PAGE CONFIG
-st.set_page_config(page_title="AI Companion", layout="wide")
+load_dotenv()
 
-# API KEYS
-@st.cache_resource
-def load_keys():
-    groq_key = os.getenv("GROQ_API_KEY")
-    rep_key = os.getenv("REPLICATE_API_TOKEN") 
-    stripe_key = os.getenv("STRIPE_SECRET_KEY")
-    
-    if not all([groq_key, rep_key, stripe_key]):
-        st.error("🔴 BACKEND DOWN - Missing API Keys")
-        st.stop()
-    
-    return groq_key, rep_key, stripe_key
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+replicate_client = replicate.Client(api_token=os.getenv("REPLICATE_API_TOKEN"))
 
-groq_key, rep_key, stripe_key = load_keys()
+st.set_page_config(page_title="AI Companion", page_icon="💕")
 
-# INIT
-groq_client = Groq(api_key=groq_key)
-stripe.api_key = stripe_key
-replicate.Client(api_token=rep_key)
+st.title("💕 AI Companion NSFW")
 
-# TABS
-tab1, tab2, tab3 = st.tabs(["💬 Chat", "🖼️ Images", "💳 Pay"])
+# Sidebar
+with st.sidebar:
+    st.header("🔑 Premium Features")
+    if st.button("Upgrade to Pro ($9.99)"):
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {'name': 'AI Companion Pro'},
+                    'unit_amount': 999,
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url='https://ai-companion-nsfw-1.onrender.com/?success=true',
+            cancel_url='https://ai-companion-nsfw-1.onrender.com/?cancel=true',
+        )
+        st.markdown(f"[Pay Now]({checkout_session.url})")
+
+tab1, tab2 = st.tabs(["💬 Chat", "🖼️ Generate Image"])
 
 with tab1:
-    st.title("🤖 Uncensored AI Chat")
-    
     if "messages" not in st.session_state:
         st.session_state.messages = []
     
-    for msg in st.session_state.messages:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
     
-    prompt = st.chat_input("Talk dirty...")
-    
-    if prompt:
+    if prompt := st.chat_input("Ask anything..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
         
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
-                response = groq_client.chat.completions.create(
-                    model="llama3llama-3.2-1b-instant-8b-8192",
-                    messages=st.session_state.messages,
-                    temperature=0.7,
+                response = client.chat.completions.create(
+                    model="llama-3.2-1b-instant",  # ✅ FIXED MODEL
+                    messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages],
+                    temperature=0.7,  # ✅ FIXED TEMP
+                    max_tokens=1024
                 )
-                msg = response.choices[0].message.content
-                st.markdown(msg)
-                st.session_state.messages.append({"role": "assistant", "content": msg})
+                st.markdown(response.choices[0].message.content)
+                st.session_state.messages.append({"role": "assistant", "content": response.choices[0].message.content})
 
 with tab2:
-    st.title("🔥 NSFW Images")
-    prompt = st.text_input("Image prompt:", "nude anime girl")
-    if st.button("Generate", type="primary"):
-        with st.spinner("Creating..."):
-            output = replicate.run(
-                "stability-ai/stable-diffusion-xl-base-1.0:1964d2cb9fbe9dcf3d2331c6c49976a6f9885de86498c50b1c3d1ce308e9118c",
-                input={"prompt": prompt}
+    prompt = st.text_input("Image prompt:", placeholder="🔥 hot anime girl in cyberpunk city")
+    if st.button("Generate NSFW Image", type="primary"):
+        with st.spinner("Generating..."):
+            output = replicate_client.run(
+                "stability-ai/stable-diffusion-xl-base-1.0:ac732df83cea7fff18b8472768c88ad041fa750ff7682a21bdead6406d9b66e7",
+                input={"prompt": prompt + " nsfw, highly detailed, 8k", "num_outputs": 1}
             )
             st.image(output[0])
-
-with tab3:
-    st.title("💎 Unlock Premium ($5)")
-    if st.button("Pay $5", type="primary"):
-        session = stripe.checkout.Session.create(
-            payment_method_types=['card'],
-            line_items=[{
-                'price_data': {
-                    'currency': 'usd',
-                    'product_data': {'name': 'AI Companion Premium'},
-                    'unit_amount': 500,
-                },
-                'quantity': 1,
-            }],
-            mode='payment',
-            success_url='https://ai-companion-nsfw-1.onrender.com/?success=true',
-            cancel_url='https://ai-companion-nsfw-1.onrender.com/?canceled=true',
-        )
-        st.markdown(f"[Pay Now](https://checkout.stripe.com/pay/{session.id})")
-
-
-
