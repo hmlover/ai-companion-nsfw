@@ -64,7 +64,10 @@ with tab2:
     if st.button("Generate NSFW Image", type="primary"):
         with st.spinner("Generating..."):
             output = replicate_client.run(
-                "stability-ai/stable-diffusion-xl-base-1.0:ac732df83cea7fff18b8472768c88ad041fa750ff7682a21bdead6406d9b66e7",
-                input={"prompt": prompt + " nsfw, highly detailed, 8k", "num_outputs": 1}
-            )
-            st.image(output[0])
+    "black-forest-labs/flux-schnell:4b1569f6d775ae554d0ec6d4b56f236e7ba099fb7a094e8fbe9b5d8c07f0b380",
+    input={
+        "prompt": prompt + ", nsfw, highly detailed, 8k, realistic",
+        "num_outputs": 1,
+        "num_inference_steps": 4
+    }
+)
