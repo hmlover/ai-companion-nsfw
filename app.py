@@ -45,7 +45,7 @@ with tab1:
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 stream = groq_client.chat.completions.create(
-                    model="llama3-8b-8192",
+                    model="llama-3.2-1b-instant",
                     messages=st.session_state.messages,
                     temperature=0.7,
                     stream=True,
