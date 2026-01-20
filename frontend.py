@@ -4,7 +4,7 @@ import os
 from groq import Groq
 import replicate
 import stripe
-from dotenv import load_dotenv
+
 
 load_dotenv()
 
