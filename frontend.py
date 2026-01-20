@@ -61,13 +61,20 @@ with tab1:
 
 with tab2:
     prompt = st.text_input("Image prompt:", placeholder="🔥 hot anime girl in cyberpunk city")
-    if st.button("Generate NSFW Image", type="primary"):
-        with st.spinner("Generating..."):
+    if st.button("🔥 Generate NSFW Image", type="primary"):
+    prompt = st.text_input("NSFW Prompt:", value="beautiful woman, detailed, realistic, 8k")
+    
+    try:
+        with st.spinner('Generating...'):
             output = replicate_client.run(
-    "black-forest-labs/flux-schnell:41f10c95abb5c1fa922f67a0d895ee5cf253ce4cc6c8659f9f4d4c7abaf8d6d8",
-    input={
-        "prompt": f"{prompt}, nsfw, ultra detailed, 8k, photorealistic",
-        "num_outputs": 1,
-        "num_inference_steps": 4
-    }
-)
+                "stability-ai/stable-diffusion:27b93a2413e7f36cd83da926f3656280b2931564ff050bf9575f1fdf9bcd7478",
+                input={
+                    "prompt": prompt,
+                    "num_outputs": 1,
+                    "num_inference_steps": 20
+                }
+            )
+        st.image(output[0])
+        st.success("✅ Generated!")
+    except Exception as e:
+        st.error(f"Error: {str(e)[:200]}")
