@@ -52,9 +52,9 @@ with tab1:
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 response = groq_client.chat.completions.create(
-                    model="llama3-8b-8192",
+                    model="llama3llama-3.2-1b-instant-8b-8192",
                     messages=st.session_state.messages,
-                    temperature=0.8,
+                    temperature=0.7,
                 )
                 msg = response.choices[0].message.content
                 st.markdown(msg)
