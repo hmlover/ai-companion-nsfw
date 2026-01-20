@@ -64,7 +64,7 @@ with tab2:
     if st.button("Generate NSFW Image", type="primary"):
         with st.spinner("Generating..."):
             output = replicate_client.run(
-    ""black-forest-labs/flux-schnell:4b1569f6d775ae554d0ec6d4b56f236e7ba099fb7a094e8fbe9b5d8c07f0b380",
+    "black-forest-labs/flux-schnell:4b1569f6d775ae554d0ec6d4b56f236e7ba099fb7a094e8fbe9b5d8c07f0b380",
     input={
         "prompt": f"{prompt}, nsfw, ultra detailed, 8k, photorealistic",
         "num_outputs": 1,
