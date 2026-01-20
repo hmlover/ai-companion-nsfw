@@ -66,7 +66,7 @@ with tab2:
     try:
         with st.spinner('Generating...'):
             output = replicate_client.run(
-                "stability-ai/stable-diffusion:27b93a2413e7f36cd83da926f3656280b2931564ff050bf9575f1fdf9bcd7478",
+                "black-forest-labs/flux-schnell:d041a0dbcb6d899e9967d6d6c0fc6f0f",
                 input={
                     "prompt": prompt,
                     "num_outputs": 1,
