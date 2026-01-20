@@ -69,7 +69,7 @@ with tab2:
             with st.spinner('Generating...'):
                 # ✅ 100% WORKING - Stability AI
                 output = replicate_client.run(
-                    "stability-ai/stable-diffusion-xl-base-1.0:27b93a2413e7f36cd83da926f3656280b2931564ff050bf9575f1fdf9bcd7478",
+                    "stability-ai/sdxl:39ed52f2d7a1a30b7a8a1d3c7231c207eccea890f797a3b212e27cd46e9d9c4d",
                     input={
                         "prompt": prompt,
                         "num_outputs": 1,
