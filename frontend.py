@@ -6,6 +6,9 @@ from dotenv import load_dotenv
 load_dotenv()
 st.set_page_config(page_title="AI Companion 💦", layout="wide")
 
+# Fix Render port
+port = int(os.environ.get("PORT", 8501))
+
 st.markdown("""
 # 💋 AI Companion - Your Dirty Secret
 Chat with your uncensored AI lover 😈
@@ -34,3 +37,7 @@ if prompt := st.chat_input("Make me hard..."):
                 st.session_state.messages.append({"role": "assistant", "content": resp["response"]})
             except:
                 st.error("Backend down? Check Terminal 1!")
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8501))
+    st.run(host="0.0.0.0", port=port)
