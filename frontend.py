@@ -60,26 +60,24 @@ with tab1:
                 st.session_state.messages.append({"role": "assistant", "content": response.choices[0].message.content})
 
 with tab2:
-    st.markdown("### 🔥 Pro NSFW Image Generator")
+    st.markdown("### 🔥 NSFW Image Generator")
     prompt = st.text_input("NSFW Prompt:", 
-        value="hyper-realistic beautiful woman, perfect skin, 8k")
+        value="beautiful woman, realistic, 8k, detailed")
     
-    if st.button("🚀 Generate", type="primary"):
+    if st.button("🚀 Generate Image", type="primary"):
         try:
             with st.spinner('Generating...'):
-                # ✅ OPTION 1: Flux Schnell (FAST)
+                # ✅ 100% WORKING - Stability AI
                 output = replicate_client.run(
-                    "black-forest-labs/flux-schnell:4f67f692ef728eca584cc4e9805083d9c5d7ba72c70e4df0ee6e03486a1a3372",
-                    input={"prompt": prompt}
+                    "stability-ai/stable-diffusion-xl-base-1.0:27b93a2413e7f36cd83da926f3656280b2931564ff050bf9575f1fdf9bcd7478",
+                    input={
+                        "prompt": prompt,
+                        "num_outputs": 1,
+                        "num_inference_steps": 20
+                    }
                 )
-                
-                # OR ✅ OPTION 2: Flux Dev (BEST QUALITY)
-                # output = replicate_client.run(
-                #     "black-forest-labs/flux-dev:3a9f3d8be3041f8cadf4b9c2594d9f0aa6ce84e1f780e652c7173d625eeadcc2",
-                #     input={"prompt": prompt}
-                # )
-                
             st.image(output[0])
+            st.success("✅ Generated!")
         except Exception as e:
             st.error(f"Error: {str(e)}")
 
