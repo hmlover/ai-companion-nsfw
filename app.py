@@ -47,7 +47,7 @@ with tab1:
                 stream = groq_client.chat.completions.create(
                     model="llama-3.2-1b-instant",
                     messages=st.session_state.messages,
-                    temperature=0.7,
+                    temperature=0.75,
                     stream=True,
                 )
                 response = st.write_stream(chunk.choices[0].delta.content or "" for chunk in stream)
