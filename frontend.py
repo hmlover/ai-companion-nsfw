@@ -60,26 +60,26 @@ with tab1:
                 st.session_state.messages.append({"role": "assistant", "content": response.choices[0].message.content})
 
 with tab2:
-    # PROMPT ALWAYS VISIBLE
-    prompt = st.text_input("🔥 NSFW Prompt:", 
-        value="hyper-realistic beautiful woman, perfect skin, 8k, detailed face")
+    st.markdown("### 🔥 Pro NSFW Image Generator")
+    prompt = st.text_input("NSFW Prompt:", 
+        value="hyper-realistic beautiful woman, perfect skin, 8k")
     
-    # SEPARATE BUTTON
-    if st.button("🚀 Generate Pro Image", type="primary", use_container_width=True):
-        if prompt.strip():
-            try:
-                with st.spinner('🖼️ Generating Pro Image...'):
-                    output = replicate_client.run(
-                        "black-forest-labs/flux-schnell:d041a0dbcb6d899e9967d6d6c0fc6f0f",
-                        input={
-                            "prompt": prompt,
-                            "num_inference_steps": 4  # FASTER
-                        }
-                    )
-                st.image(output[0], use_column_width=True)
-                st.success("✅ Pro Image Generated!")
-            except Exception as e:
-                st.error(f"❌ {str(e)[:150]}")
-        else:
-            st.warning("👆 Enter a prompt first!")
+    if st.button("🚀 Generate", type="primary"):
+        try:
+            with st.spinner('Generating...'):
+                # ✅ OPTION 1: Flux Schnell (FAST)
+                output = replicate_client.run(
+                    "black-forest-labs/flux-schnell:4f67f692ef728eca584cc4e9805083d9c5d7ba72c70e4df0ee6e03486a1a3372",
+                    input={"prompt": prompt}
+                )
+                
+                # OR ✅ OPTION 2: Flux Dev (BEST QUALITY)
+                # output = replicate_client.run(
+                #     "black-forest-labs/flux-dev:3a9f3d8be3041f8cadf4b9c2594d9f0aa6ce84e1f780e652c7173d625eeadcc2",
+                #     input={"prompt": prompt}
+                # )
+                
+            st.image(output[0])
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
 
