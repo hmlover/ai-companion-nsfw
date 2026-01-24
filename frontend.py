@@ -49,7 +49,7 @@ class BDSMAI:
         """🔥 FIXED - WORKING IMAGES"""
         try:
             output = self.client.run(
-                "stability-ai/stable-diffusion-xl-base-1.0:27b93a2413e7f36ee395912f17f7d0c3ec6f7d8e9f0a1b2c3d4e5f6g7h8i9j0k",
+                "sstability-ai/stable-diffusion:ac732df83cea7fff18b8472768c88ad041fa750ff7682a21bdea5fb557be78d1",
                 input={
                     "prompt": f"BDSM art: {prompt}, ultra detailed, 8k, cinematic lighting, leather latex",
                     "steps": 25,
