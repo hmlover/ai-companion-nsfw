@@ -11,7 +11,7 @@ stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 REPLICATE_API = os.getenv("REPLICATE_API_TOKEN")
 DOMAIN = os.getenv("DOMAIN", "bdsmcompanion.com")
 
-# 🔥 BULLETPROOF IMAGE HANDLER - ADD THIS FIRST
+# 🔥 BULLETPROOF IMAGE HANDLER
 @st.cache_data
 def safe_image_display(image_url, caption=None):
     """Safe image - NO CRASHES EVER"""
@@ -32,13 +32,6 @@ def safe_image_display(image_url, caption=None):
             caption="Image unavailable"
         )
 
-# Models
-MODELS = {
-    "free": "stability-ai/stable-diffusion-xl-base-1.0:27b93a2413e7f36ee395912f17f7d0c3ec6f7d8e9f0a1b2c3d4e5f6g7h8i9j0k",
-    "pro": "fofr/realvisxl-v2.0:6ee929bad5e3d4e8f5a6b7c8d9e0f1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r",
-    "chat": "meta/llama-3.1-8b-instruct:7e478b689f90f18e095e6765e6e4a4b67c1e1f3ee2cd1c2700b6d9a7a4d9c8f"
-}
-
 class BDSMAI:
     def __init__(self):
         self.client = Client(api_token=REPLICATE_API)
@@ -53,36 +46,8 @@ class BDSMAI:
         return prompts.get(role, prompts["Domme"])
     
     def generate_image(self, prompt, model="free"):
-        model_name = MODELS[model]
-        output = self.client.run(
-            model_name,
-            input={
-                "prompt": f"BDSM scene: {prompt}, hyper-realistic, leather latex, dark cinematic lighting, 8k"
-            }
-        )
-        return output[0]
-    
-    def chat(self, user_id, message, kink="Domme"):
-        story_key = f"story_{user_id}_{kink}"
-        story = st.session_state.get(story_key, "")
-        
-        system = self.bdsm_prompt(kink)
-        full_prompt = f"{system}\n\nSTORY: {story}\nUSER: {message}"
-        
-        output = self.client.run(
-            MODELS["chat"],
-            input={
-                "prompt": full_prompt,
-                "max_new_tokens": 300,
-                "temperature": 0.7
-            }
-        )
-        response = output[0]
-
-        def generate_image(self, prompt, model="free"):
-        """🔥 FIXED IMAGE GENERATOR"""
+        """🔥 FIXED - WORKING IMAGES"""
         try:
-            # PROVEN WORKING MODELS
             output = self.client.run(
                 "stability-ai/stable-diffusion-xl-base-1.0:27b93a2413e7f36ee395912f17f7d0c3ec6f7d8e9f0a1b2c3d4e5f6g7h8i9j0k",
                 input={
@@ -93,14 +58,33 @@ class BDSMAI:
                 }
             )
             
-            # Replicate returns LIST - grab first image
             image_url = output[0] if isinstance(output, list) else output
-            st.success(f"✅ Generated: {image_url[:50]}...")
+            st.success(f"✅ Generated!")
             return image_url
             
         except Exception as e:
-            st.error(f"❌ {e}")
+            st.error(f"❌ Image failed: {e}")
             return None
+    
+    def chat(self, user_id, message, kink="Domme"):
+        story_key = f"story_{user_id}_{kink}"
+        story = st.session_state.get(story_key, "")
+        
+        system = self.bdsm_prompt(kink)
+        full_prompt = f"{system}\n\nSTORY: {story}\nUSER: {message}"
+        
+        output = self.client.run(
+            "meta/llama-3.1-8b-instruct:7e478b689f90f18e095e6765e6e4a4b67c1e1f3ee2cd1c2700b6d9a7a4d9c8f",
+            input={
+                "prompt": full_prompt,
+                "max_new_tokens": 300,
+                "temperature": 0.7
+            }
+        )
+        response = output[0]
+        
+        st.session_state[story_key] = f"{story}\nUSER: {message}\nAI: {response}"
+        return response
 
 # Stripe Checkout
 @st.cache_data
@@ -171,14 +155,13 @@ with col2:
 st.markdown("---")
 st.markdown("### 🖼️ **BDSM Art Generator**")
 
-with st.columns([3,1])[0]:
-    img_prompt = st.text_area("Your Fantasy:", 
-        "dominant woman in black leather corset, dungeon background, red lighting, hyper-realistic",
-        height=100)
+img_prompt = st.text_area("Your Fantasy:", 
+    "dominant woman in black leather corset, dungeon background, red lighting, hyper-realistic",
+    height=100)
 
 if st.button("🎨 GENERATE ART", type="primary", use_container_width=True):
     with st.spinner("Creating masterpiece..."):
         image_url = ai.generate_image(img_prompt)
         if image_url:
-            st.image(image_url, use_column_width=True)
+            safe_image_display(image_url, "Your BDSM Art")
             st.download_button("💾 Download HD", image_url, "bdsm-art.png")
