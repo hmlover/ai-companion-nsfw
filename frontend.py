@@ -34,8 +34,8 @@ def safe_image_display(image_url, caption=None):
 
 # Models
 MODELS = {
-    "free": "prunaai/z-image-turbo",
-    "pro": "prunaai/z-image-turbo", 
+    "free": "ai-forever/kandinsky-2.2:65110b76d79f3780ed5559c2d3a9a492e2a2e9f6f6c4f0d2d8e8f8d8e8f8d8e",  # Kandinsky
+    "pro": "black-forest-labs/flux-dev:8b02a4c3d1b8d8e4f5a6b7c8d9e0f1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q",     # Flux
     "chat": "meta/llama-3.1-8b-instruct:7e478b689f90f18e095e6765e6e4a4b67c1e1f3ee2cd1c2700b6d9a7a4d9c8f"
 }
 
@@ -150,15 +150,31 @@ with col2:
 # Image Gen
 st.markdown("---")
 st.markdown("### 🖼️ **Generate BDSM Art**")
-img_prompt = st.text_area("Describe your fantasy:", placeholder="Leather corset, chains, red lighting...")
 
-col_img1, col_img2 = st.columns([1,4])
-with col_img2:
+col_prompt, col_gen = st.columns([3,1])
+with col_prompt:
+    img_prompt = st.text_area("BDSM Fantasy:", 
+                             placeholder="Leather corset, dungeon chains, red ambient lighting, hyper-realistic",
+                             height=80)
+
+with col_gen:
     model = "pro" if st.session_state.pro_user else "free"
-    if st.button("**🎨 GENERATE IMAGE**", use_container_width=True) and img_prompt:
-        with st.spinner("Creating..."):
-            image_url = ai.generate_image(img_prompt, model)
-            safe_image_display(image_url, caption="Your BDSM fantasy")  # ✅ FIXED!
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button(f"🎨 FREE", use_container_width=True):
+            model = "free"
+    with col2:
+        if st.button(f"👑 PRO", use_container_width=True):
+            model = "pro"
 
-st.markdown("---")
-st.markdown("*🔒 Private • Safe word: RED • 18+ only*")
+if img_prompt and model:
+    with st.spinner(f"Creating {model.upper()} BDSM art..."):
+        try:
+            image_url = ai.generate_image(img_prompt, model)
+st.write("🔍 DEBUG URL:", image_url)
+st.write("Type:", type(image_url))
+st.write("Length:", len(str(image_url)))
+            safe_image_display(image_url, f"{model.upper()} BDSM Fantasy")
+        except Exception as e:
+            st.error(f"Generation failed: {e}")
+            st.info("🔧 Check Replicate API token in Render env vars")
