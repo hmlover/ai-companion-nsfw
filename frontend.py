@@ -171,10 +171,6 @@ if img_prompt and model:
     with st.spinner(f"Creating {model.upper()} BDSM art..."):
         try:
             image_url = ai.generate_image(img_prompt, model)
-st.write("🔍 DEBUG URL:", image_url)
-st.write("Type:", type(image_url))
-st.write("Length:", len(str(image_url)))
             safe_image_display(image_url, f"{model.upper()} BDSM Fantasy")
         except Exception as e:
-            st.error(f"Generation failed: {e}")
-            st.info("🔧 Check Replicate API token in Render env vars")
+            st.error(f"Image failed: {e}")
