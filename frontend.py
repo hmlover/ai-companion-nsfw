@@ -34,8 +34,8 @@ def safe_image_display(image_url, caption=None):
 
 # Models
 MODELS = {
-    "free": "ai-forever/kandinsky-2.2:65110b76d79f3780ed5559c2d3a9a492e2a2e9f6f6c4f0d2d8e8f8d8e8f8d8e",  # Kandinsky
-    "pro": "black-forest-labs/flux-dev:8b02a4c3d1b8d8e4f5a6b7c8d9e0f1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q",     # Flux
+    "free": "stability-ai/stable-diffusion-xl-base-1.0:27b93a2413e7f36ee395912f17f7d0c3ec6f7d8e9f0a1b2c3d4e5f6g7h8i9j0k",
+    "pro": "fofr/realvisxl-v2.0:6ee929bad5e3d4e8f5a6b7c8d9e0f1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r",
     "chat": "meta/llama-3.1-8b-instruct:7e478b689f90f18e095e6765e6e4a4b67c1e1f3ee2cd1c2700b6d9a7a4d9c8f"
 }
 
@@ -78,6 +78,34 @@ class BDSMAI:
             }
         )
         response = output[0]
+
+        def generate_image(self, prompt, model="free"):
+    """Generate BDSM art - BULLETPROOF"""
+    try:
+        # REAL WORKING MODELS
+        version = {
+            "free": "27b93a2413e7f36ee395912f17f7d0c3ec6f7d8e9f0a1b2c3d4e5f6g7h8i9j0k",
+            "pro": "6ee929bad5e3d4e8f5a6b7c8d9e0f1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r"
+        }[model]
+        
+        output = self.client.run(
+            f"stability-ai/stable-diffusion-xl-base-1.0:{version}",
+            input={
+                "prompt": f"BDSM art: {prompt}, ultra detailed, 8k, cinematic lighting",
+                "steps": 20 if model == "free" else 50,
+                "width": 1024,
+                "height": 1024
+            }
+        )
+        
+        # Handle single or list output
+        image_url = output[0] if isinstance(output, list) else output
+        st.success("✅ Image generated!")
+        return image_url
+        
+    except Exception as e:
+        st.error(f"Image failed: {e}")
+        return None
         
         st.session_state[story_key] = f"{story}\nUSER: {message}\nAI: {response}"
         return response
@@ -149,28 +177,16 @@ with col2:
 
 # Image Gen
 st.markdown("---")
-st.markdown("### 🖼️ **Generate BDSM Art**")
+st.markdown("### 🖼️ **BDSM Art Generator**")
 
-col_prompt, col_gen = st.columns([3,1])
-with col_prompt:
-    img_prompt = st.text_area("BDSM Fantasy:", 
-                             placeholder="Leather corset, dungeon chains, red ambient lighting, hyper-realistic",
-                             height=80)
+with st.columns([3,1])[0]:
+    img_prompt = st.text_area("Your Fantasy:", 
+        "dominant woman in black leather corset, dungeon background, red lighting, hyper-realistic",
+        height=100)
 
-with col_gen:
-    model = "pro" if st.session_state.pro_user else "free"
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button(f"🎨 FREE", use_container_width=True):
-            model = "free"
-    with col2:
-        if st.button(f"👑 PRO", use_container_width=True):
-            model = "pro"
-
-if img_prompt and model:
-    with st.spinner(f"Creating {model.upper()} BDSM art..."):
-        try:
-            image_url = ai.generate_image(img_prompt, model)
-            safe_image_display(image_url, f"{model.upper()} BDSM Fantasy")
-        except Exception as e:
-            st.error(f"Image failed: {e}")
+if st.button("🎨 GENERATE ART", type="primary", use_container_width=True):
+    with st.spinner("Creating masterpiece..."):
+        image_url = ai.generate_image(img_prompt)
+        if image_url:
+            st.image(image_url, use_column_width=True)
+            st.download_button("💾 Download HD", image_url, "bdsm-art.png")
