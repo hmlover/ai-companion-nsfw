@@ -9,31 +9,36 @@ import hashlib
 # Config - RENDER ENV VARS
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 REPLICATE_API = os.getenv("REPLICATE_API_TOKEN")
-DOMAIN = os.getenv("DOMAIN", "yourapp.onrender.com")  # Temporary
+DOMAIN = os.getenv("DOMAIN", "bdsmcompanion.com")
 
-# Models (unchanged)
+# 🔥 BULLETPROOF IMAGE HANDLER - ADD THIS FIRST
+@st.cache_data
+def safe_image_display(image_url, caption=None):
+    """Safe image - NO CRASHES EVER"""
+    if not image_url or image_url.strip() in ['h', '', 'None', 'null']:
+        st.image(
+            "https://via.placeholder.com/500x300/8B0000/FFFFFF?text=BDSM+Companion",
+            use_column_width=True,
+            caption=caption or "Upload your photo"
+        )
+        return
+    
+    try:
+        st.image(image_url, use_column_width=True, caption=caption)
+    except Exception:
+        st.image(
+            "https://via.placeholder.com/500x300/ff0000/FFFFFF?text=Image+Error",
+            use_column_width=True,
+            caption="Image unavailable"
+        )
+
+# Models
 MODELS = {
     "free": "prunaai/z-image-turbo",
     "pro": "prunaai/z-image-turbo", 
     "chat": "meta/llama-3.1-8b-instruct:7e478b689f90f18e095e6765e6e4a4b67c1e1f3ee2cd1c2700b6d9a7a4d9c8f"
 }
-def display_user_image(user_image_url):
-    """Safe image with fallback + error handling"""
-    if not user_image_url or user_image_url.strip() in ['h', '', 'None']:
-       safe_image_display("https://via.placeholder.com/400x200/8B0000/fff?text=Upload+Photo", 
-                use_column_width=True)
-        return
-    
-    col1, col2 = st.columns([8,1])
-    with col1:
-        try:
-            safe_image_display(user_image_url, use_column_width=True)
-        except:
-            safe_image_display("https://via.placeholder.com/400x200/ff0000/fff?text=Image+Error")
-    with col2:
-        st.button("🖼️", key="refresh_img")
 
-# [REST OF CODE IDENTICAL - copy from previous]
 class BDSMAI:
     def __init__(self):
         self.client = Client(api_token=REPLICATE_API)
@@ -83,7 +88,7 @@ def create_checkout_session(user_id):
     return stripe.checkout.Session.create(
         payment_method_types=['card'],
         line_items=[{
-            'price': os.getenv("STRIPE_PRICE_ID"),  # ← ENV VAR
+            'price': os.getenv("STRIPE_PRICE_ID"),
             'quantity': 1,
         }],
         mode='subscription',
@@ -92,12 +97,12 @@ def create_checkout_session(user_id):
         metadata={'user_id': user_id}
     )
 
-# [PASTE REST OF UI CODE FROM PREVIOUS - sidebar, chat, images EXACT SAME]
+# UI
 st.set_page_config(page_title="🔗 BDSM AI Mistress", layout="wide")
 st.markdown("# 🔗 **BDSM AI Mistress**")
 ai = BDSMAI()
 
-# Sidebar (same)
+# Sidebar
 with st.sidebar:
     st.markdown("### 🎭 **Choose Your Kink**")
     kink_mode = st.selectbox("Role:", ["Domme", "Sub", "Puppy", "Master"])
@@ -116,7 +121,7 @@ with st.sidebar:
             session = create_checkout_session(full_id)
             st.markdown(f"[💳 **COMPLETE PAYMENT**]({session.url})")
 
-# Main Chat (same as before)
+# Main Chat
 col1, col2 = st.columns([1,3])
 with col1:
     st.markdown("### 💬 **Persistent Story**")
@@ -142,7 +147,7 @@ with col2:
         
         st.session_state.messages.append({"role": "assistant", "content": response})
 
-# Image Gen (same)
+# Image Gen
 st.markdown("---")
 st.markdown("### 🖼️ **Generate BDSM Art**")
 img_prompt = st.text_area("Describe your fantasy:", placeholder="Leather corset, chains, red lighting...")
@@ -153,8 +158,7 @@ with col_img2:
     if st.button("**🎨 GENERATE IMAGE**", use_container_width=True) and img_prompt:
         with st.spinner("Creating..."):
             image_url = ai.generate_image(img_prompt, model)
-            safe_image_display(image_url)  # FIXED!
-
+            safe_image_display(image_url, caption="Your BDSM fantasy")  # ✅ FIXED!
 
 st.markdown("---")
 st.markdown("*🔒 Private • Safe word: RED • 18+ only*")
