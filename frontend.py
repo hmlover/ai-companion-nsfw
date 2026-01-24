@@ -17,6 +17,21 @@ MODELS = {
     "pro": "prunaai/z-image-turbo", 
     "chat": "meta/llama-3.1-8b-instruct:7e478b689f90f18e095e6765e6e4a4b67c1e1f3ee2cd1c2700b6d9a7a4d9c8f"
 }
+def display_user_image(user_image_url):
+    """Safe image with fallback + error handling"""
+    if not user_image_url or user_image_url.strip() in ['h', '', 'None']:
+       safe_image_display("https://via.placeholder.com/400x200/8B0000/fff?text=Upload+Photo", 
+                use_column_width=True)
+        return
+    
+    col1, col2 = st.columns([8,1])
+    with col1:
+        try:
+            safe_image_display(user_image_url, use_column_width=True)
+        except:
+            safe_image_display("https://via.placeholder.com/400x200/ff0000/fff?text=Image+Error")
+    with col2:
+        st.button("🖼️", key="refresh_img")
 
 # [REST OF CODE IDENTICAL - copy from previous]
 class BDSMAI:
@@ -138,7 +153,8 @@ with col_img2:
     if st.button("**🎨 GENERATE IMAGE**", use_container_width=True) and img_prompt:
         with st.spinner("Creating..."):
             image_url = ai.generate_image(img_prompt, model)
-            st.image(image_url, use_column_width=True)
+            safe_image_display(image_url)  # FIXED!
+
 
 st.markdown("---")
 st.markdown("*🔒 Private • Safe word: RED • 18+ only*")
