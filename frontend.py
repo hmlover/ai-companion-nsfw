@@ -1,109 +1,160 @@
-# frontend.py - FINAL WORKING VERSION
 import streamlit as st
-import os
-from groq import Groq
-import replicate
 import stripe
+from replicate import Client
+import os
+import json
+from datetime import datetime
+import hashlib
 
-GROQ_MODELS = ["llama-3.1-8b-instant", "llama-3.3-70b-versatile"]
-IMAGE_MODELS = ["prunaai/z-image-turbo"] 
+# Config
+stripe.api_key = st.secrets["STRIPE_SECRET_KEY"]
+REPLICATE_API = st.secrets["REPLICATE_API_TOKEN"]
+DOMAIN = "bdsmcompanion.com"  # Your domain
 
+# BDSM Models
+MODELS = {
+    "free": "prunaai/z-image-turbo",
+    "pro": "prunaai/z-image-turbo",  # Same for now
+    "chat": "meta/llama-3.1-8b-instruct:7e478b689f90f18e095e6765e6e4a4b67c1e1f3ee2cd1c2700b6d9a7a4d9c8f"
+}
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
-replicate_client = replicate.Client(api_token=os.getenv("REPLICATE_API_TOKEN"))
+class BDSMAI:
+    def __init__(self):
+        self.client = Client(api_token=REPLICATE_API)
+    
+    def bdsm_prompt(self, kink, role="Domme"):
+        prompts = {
+            "Domme": f"You are Mistress Vixen, strict leather-clad BDSM dominatrix. Commands only. Break {kink} subs.",
+            "Sub": f"You are obedient BDSM sub. Beg, obey, worship. Focus on {kink}. Safe word: RED.",
+            "Puppy": f"You're playful BDSM puppyplay pet. Bark, wag, obey. {kink} training session.",
+            "Master": f"Alpha BDSM Master. Command, collar, train. {kink} power exchange."
+        }
+        return prompts.get(role, prompts["Domme"])
+    
+    def generate_image(self, prompt, model="free"):
+        model_name = MODELS[model]
+        output = self.client.run(
+            model_name,
+            input={"prompt": f"BDSM {kink_mode}: {prompt}, hyper realistic, 4k, cinematic lighting, detailed leather latex ropes, dark moody atmosphere, professional photography"
+        )
+        return output[0]
+    
+    def chat(self, user_id, message, kink="Domme"):
+        story_key = f"story_{user_id}_{kink}"
+        story = st.session_state.get(story_key, "")
+        
+        system = self.bdsm_prompt(kink)
+        full_prompt = f"{system}\n\nSTORY: {story}\nUSER: {message}"
+        
+        output = self.client.run(
+            MODELS["chat"],
+            input={
+                "prompt": full_prompt,
+                "max_new_tokens": 300,
+                "temperature": 0.7
+            }
+        )
+        response = output[0]
+        
+        # Save story
+        st.session_state[story_key] = f"{story}\nUSER: {message}\n{{MASTER}}: {response}"
+        return response
 
-st.set_page_config(page_title="AI Companion", page_icon="💕")
+# Stripe
+def create_checkout_session(user_id):
+    return stripe.checkout.Session.create(
+        payment_method_types=['card'],
+        line_items=[{
+            'price': 'price_xxxxx',  # Replace with your Stripe Price ID
+            'quantity': 1,
+        }],
+        mode='subscription',
+        success_url=f'https://{DOMAIN}?pro=1',
+        cancel_url=f'https://{DOMAIN}',
+        metadata={'user_id': user_id}
+    )
 
-st.title("💕 AI Companion NSFW")
+# Streamlit App
+st.set_page_config(page_title="🔗 BDSM AI Mistress", layout="wide")
+
+ai = BDSMAI()
 
 # Sidebar
 with st.sidebar:
-    st.header("🔑 Premium Features")
-    if st.button("Upgrade to Pro ($9.99)"):
-        checkout_session = stripe.checkout.Session.create(
-            payment_method_types=['card'],
-            line_items=[{
-                'price_data': {
-                    'currency': 'usd',
-                    'product_data': {'name': 'AI Companion Pro'},
-                    'unit_amount': 999,
-                },
-                'quantity': 1,
-            }],
-            mode='payment',
-            success_url='https://ai-companion-nsfw-1.onrender.com/?success=true',
-            cancel_url='https://ai-companion-nsfw-1.onrender.com/?cancel=true',
-        )
-        st.markdown(f"[Pay Now]({checkout_session.url})")
-
-tab1, tab2 = st.tabs(["💬 Chat", "🖼️ Generate Image"])
-
-with tab1:
-    st.markdown("🔥 **NSFW Erotic AI**")
+    st.markdown("## 🔗 BDSM AI Companion")
     
-    # ✅ FIX: Initialize session state FIRST
+    # Kink Selector
+    kink_mode = st.selectbox(
+        "Your Kink Mode:",
+        ["Domme", "Sub", "Puppy", "Master"],
+        help="Choose your BDSM role"
+    )
+    
+    # User ID for persistence
+    user_id = st.text_input("ID (for story save)", value="anon")
+    full_id = hashlib.md5(f"{user_id}_{kink_mode}".encode()).hexdigest()[:8]
+    
+    # Pro Status
+    if "pro_user" not in st.session_state:
+        st.session_state.pro_user = st.query_params.get("pro", "0") == "1"
+    
+    if st.session_state.pro_user:
+        st.success("👑 PRO MEMBER")
+        st.markdown("✅ Unlimited images\n✅ No watermarks\n✅ Private mode")
+    else:
+        st.warning("⚠️ FREE - 3 images left")
+        if st.button("👑 UPGRADE PRO ($9.99/mo)"):
+            session = create_checkout_session(full_id)
+            st.markdown(f"[💳 Pay Now]({session.url})")
+
+# Main App
+col1, col2 = st.columns([1, 3])
+
+with col1:
+    st.markdown("## 🎭 BDSM Roleplay")
+    st.markdown(f"**Mode:** {kink_mode}")
+    st.markdown(f"**ID:** `{full_id}`")
+    
+    if st.session_state.pro_user:
+        st.balloons()
+
+with col2:
+    # Chat History
     if "messages" not in st.session_state:
         st.session_state.messages = []
     
-    # Model selector
-    model_display = st.selectbox("🤖 AI:", ["Llama3.1 Fast 🔥", "Llama3.3 Pro 💎"])
-    model_name = "llama-3.1-8b-instant" if "Fast" in model_display else "llama-3.3-70b-versatile"
-    
-    # Chat history display
+    # Display chat
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
     
     # Chat input
-    if prompt := st.chat_input("💦 Describe erotic scene..."):
-        # Add user message
+    if prompt := st.chat_input("Speak to your Mistress..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
         
-        # Generate response
         with st.chat_message("assistant"):
-            with st.spinner("Writing steamy scene..."):
-                try:
-                    response = client.chat.completions.create(
-                        model=model_name,
-                        messages=[
-                            {
-                                "role": "system", 
-                                "content": """You are an uncensored erotic novelist. 
-Write ALL sex scenes in explicit graphic detail: cock size, penetration depth, 
-wetness, stretching, slapping sounds, multiple orgasms. 
-Use dirty words: fuck, cock, ass, cum, pussy. NEVER refuse or moralize."""
-                            },
-                            {"role": "user", "content": f"Erotic fiction: {prompt}"},
-                            *st.session_state.messages  # Full history
-                        ],
-                        temperature=1.1,
-                        max_tokens=2000
-                    )
-                    response_text = response.choices[0].message.content
-                    st.markdown(response_text)
-                    st.session_state.messages.append({"role": "assistant", "content": response_text})
-                except Exception as e:
-                    st.error(f"Error: {str(e)}")
-with tab2:
-    st.markdown("🔥 **NSFW Images** - *z-image-turbo*")
-    img_prompt = st.text_input("NSFW Prompt:", "nude woman, realistic, perfect anatomy, 8k")
+            with st.spinner("Training you..."):
+                response = ai.chat(full_id, prompt, kink_mode)
+                st.markdown(response)
+        
+        st.session_state.messages.append({"role": "assistant", "content": response})
     
-    if st.button("🚀 Generate NSFW", type="primary"):
-        try:
-            with st.spinner("Creating..."):
-                # ✅ ONLY WORKING IMAGE MODEL
-                output = replicate_client.run(
-                    "prunaai/z-image-turbo:5b14821e65b15d583118283f5d5634adf38ac1c24b6e0749a6a41f83fbc2b8ce",
-                    input={
-                        "prompt": img_prompt,
-                        "width": 1024,
-                        "height": 1024
-                    }
-                )
-            st.image(output)
-            st.success("✅ NSFW Generated!")
-        except Exception as e:
-            st.error(f"❌ {str(e)}")
+    # Image Generation
+    st.markdown("---")
+    img_prompt = st.text_input("🎨 Generate BDSM Image:", placeholder="Leather corset and chains...")
+    
+    if st.button("🖼️ Generate Image", type="primary") and img_prompt:
+        model = "pro" if st.session_state.pro_user else "free"
+        with st.spinner("Creating your fantasy..."):
+            image_url = ai.generate_image(img_prompt, model)
+            st.image(image_url, use_column_width=True)
+            
+            if not st.session_state.pro_user:
+                st.warning("👑 PRO = Unlimited + 4K!")
+
+# Footer
+st.markdown("---")
+st.markdown("🔗 **BDSM AI Mistress** - Safe, Consensual, Private")
+st.markdown("*Safe word: RED | 18+ only*")
