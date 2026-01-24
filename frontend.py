@@ -80,7 +80,7 @@ class BDSMAI:
         response = output[0]
 
         def generate_image(self, prompt, model="free"):
-    """Generate BDSM art - BULLETPROOF"""
+   
     try:
         # REAL WORKING MODELS
         version = {
