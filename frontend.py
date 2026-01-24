@@ -65,7 +65,7 @@ def create_checkout_session(user_id):
     return stripe.checkout.Session.create(
         payment_method_types=['card'],
         line_items=[{
-            'price': 'price_xxxxx',  # Replace with your Stripe Price ID
+            'price': 'price_1St4WOFO3Udql5ehb90ly4S8',  # Replace with your Stripe Price ID
             'quantity': 1,
         }],
         mode='subscription',
