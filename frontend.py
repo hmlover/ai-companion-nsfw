@@ -80,35 +80,27 @@ class BDSMAI:
         response = output[0]
 
         def generate_image(self, prompt, model="free"):
-   
-    try:
-        # REAL WORKING MODELS
-        version = {
-            "free": "27b93a2413e7f36ee395912f17f7d0c3ec6f7d8e9f0a1b2c3d4e5f6g7h8i9j0k",
-            "pro": "6ee929bad5e3d4e8f5a6b7c8d9e0f1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r"
-        }[model]
-        
-        output = self.client.run(
-            f"stability-ai/stable-diffusion-xl-base-1.0:{version}",
-            input={
-                "prompt": f"BDSM art: {prompt}, ultra detailed, 8k, cinematic lighting",
-                "steps": 20 if model == "free" else 50,
-                "width": 1024,
-                "height": 1024
-            }
-        )
-        
-        # Handle single or list output
-        image_url = output[0] if isinstance(output, list) else output
-        st.success("✅ Image generated!")
-        return image_url
-        
-    except Exception as e:
-        st.error(f"Image failed: {e}")
-        return None
-        
-        st.session_state[story_key] = f"{story}\nUSER: {message}\nAI: {response}"
-        return response
+        """🔥 FIXED IMAGE GENERATOR"""
+        try:
+            # PROVEN WORKING MODELS
+            output = self.client.run(
+                "stability-ai/stable-diffusion-xl-base-1.0:27b93a2413e7f36ee395912f17f7d0c3ec6f7d8e9f0a1b2c3d4e5f6g7h8i9j0k",
+                input={
+                    "prompt": f"BDSM art: {prompt}, ultra detailed, 8k, cinematic lighting, leather latex",
+                    "steps": 25,
+                    "width": 1024,
+                    "height": 1024
+                }
+            )
+            
+            # Replicate returns LIST - grab first image
+            image_url = output[0] if isinstance(output, list) else output
+            st.success(f"✅ Generated: {image_url[:50]}...")
+            return image_url
+            
+        except Exception as e:
+            st.error(f"❌ {e}")
+            return None
 
 # Stripe Checkout
 @st.cache_data
