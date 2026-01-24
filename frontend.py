@@ -6,18 +6,19 @@ import json
 from datetime import datetime
 import hashlib
 
-# Config
-stripe.api_key = st.secrets["STRIPE_SECRET_KEY"]
-REPLICATE_API = st.secrets["REPLICATE_API_TOKEN"]
-DOMAIN = "bdsmcompanion.com"
+# Config - RENDER ENV VARS
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+REPLICATE_API = os.getenv("REPLICATE_API_TOKEN")
+DOMAIN = os.getenv("DOMAIN", "yourapp.onrender.com")  # Temporary
 
-# Models
+# Models (unchanged)
 MODELS = {
     "free": "prunaai/z-image-turbo",
-    "pro": "prunaai/z-image-turbo",
+    "pro": "prunaai/z-image-turbo", 
     "chat": "meta/llama-3.1-8b-instruct:7e478b689f90f18e095e6765e6e4a4b67c1e1f3ee2cd1c2700b6d9a7a4d9c8f"
 }
 
+# [REST OF CODE IDENTICAL - copy from previous]
 class BDSMAI:
     def __init__(self):
         self.client = Client(api_token=REPLICATE_API)
@@ -36,7 +37,7 @@ class BDSMAI:
         output = self.client.run(
             model_name,
             input={
-                "prompt": f"BDSM {kink_mode}: {prompt}, hyper-realistic, leather latex, dark cinematic lighting, 8k"
+                "prompt": f"BDSM scene: {prompt}, hyper-realistic, leather latex, dark cinematic lighting, 8k"
             }
         )
         return output[0]
@@ -67,7 +68,7 @@ def create_checkout_session(user_id):
     return stripe.checkout.Session.create(
         payment_method_types=['card'],
         line_items=[{
-            'price': 'price_1St4WOFO3Udql5ehb90ly4S8',  # ← YOUR PRICE ID HERE
+            'price': os.getenv("STRIPE_PRICE_ID"),  # ← ENV VAR
             'quantity': 1,
         }],
         mode='subscription',
@@ -76,12 +77,12 @@ def create_checkout_session(user_id):
         metadata={'user_id': user_id}
     )
 
-# App
+# [PASTE REST OF UI CODE FROM PREVIOUS - sidebar, chat, images EXACT SAME]
 st.set_page_config(page_title="🔗 BDSM AI Mistress", layout="wide")
 st.markdown("# 🔗 **BDSM AI Mistress**")
 ai = BDSMAI()
 
-# Sidebar
+# Sidebar (same)
 with st.sidebar:
     st.markdown("### 🎭 **Choose Your Kink**")
     kink_mode = st.selectbox("Role:", ["Domme", "Sub", "Puppy", "Master"])
@@ -90,7 +91,6 @@ with st.sidebar:
     full_id = hashlib.md5(f"{user_id}_{kink_mode}".encode()).hexdigest()[:8]
     st.info(f"**Your ID:** `{full_id}`")
     
-    # Pro Status
     if "pro_user" not in st.session_state:
         st.session_state.pro_user = st.query_params.get("pro", "0") == "1"
     
@@ -101,9 +101,8 @@ with st.sidebar:
             session = create_checkout_session(full_id)
             st.markdown(f"[💳 **COMPLETE PAYMENT**]({session.url})")
 
-# Main Chat
+# Main Chat (same as before)
 col1, col2 = st.columns([1,3])
-
 with col1:
     st.markdown("### 💬 **Persistent Story**")
     st.markdown(f"**Mode:** {kink_mode}")
@@ -112,12 +111,10 @@ with col2:
     if "messages" not in st.session_state:
         st.session_state.messages = []
     
-    # Chat display
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
     
-    # Chat input
     if prompt := st.chat_input("Speak to your Mistress..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
@@ -130,7 +127,7 @@ with col2:
         
         st.session_state.messages.append({"role": "assistant", "content": response})
 
-# Image Gen
+# Image Gen (same)
 st.markdown("---")
 st.markdown("### 🖼️ **Generate BDSM Art**")
 img_prompt = st.text_area("Describe your fantasy:", placeholder="Leather corset, chains, red lighting...")
@@ -143,6 +140,5 @@ with col_img2:
             image_url = ai.generate_image(img_prompt, model)
             st.image(image_url, use_column_width=True)
 
-# Footer
 st.markdown("---")
 st.markdown("*🔒 Private • Safe word: RED • 18+ only*")
